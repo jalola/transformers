@@ -204,19 +204,16 @@ def rotate_half(x):
     return torch.cat((-x2, x1), dim=-1)
 
 
-def apply_rotary_pos_emb(query, key, cos, sin, position_ids):
+def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
     # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
-    # import pdb
-    # pdb.set_trace()
-    bsz = query.shape[0]
-    cos = cos.repeat(bsz, 1, 1, 1).gather(2, position_ids.unsqueeze(1).unsqueeze(3))
-    sin = sin.repeat(bsz, 1, 1, 1).gather(2, position_ids.unsqueeze(1).unsqueeze(3))
     # cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
     # sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]
     # cos = cos[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
     # sin = sin[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
-    q_embed = (query * cos) + (rotate_half(query) * sin)
-    k_embed = (key * cos) + (rotate_half(key) * sin)
+    cos = cos[:,:,position_ids,:].squeeze(2)
+    sin = sin[:,:,position_ids,:].squeeze(2)
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    k_embed = (k * cos) + (rotate_half(k) * sin)
     return q_embed, k_embed
 
 
